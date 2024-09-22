@@ -1,1 +1,1 @@
-role based authorization
+Mern Stack Chat Application
