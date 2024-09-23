@@ -5,9 +5,11 @@ dotenv.config();
 import connectDatabase from './database/connectDatabase.js';
 import userRoutes from './routes/user.route.js';
 import chatRoutes from './routes/chat.route.js';
+import cookieParser from 'cookie-parser';
 app.get('/', (req, res) => {
     res.send('Api working');
 });
+app.use(cookieParser());
 app.use(express.json());
 
 app.use('/api/user', userRoutes);
