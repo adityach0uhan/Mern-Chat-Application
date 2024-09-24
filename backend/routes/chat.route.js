@@ -1,14 +1,11 @@
 import chatModel from '../models/chat.model.js';
 import express from 'express';
 const router = express.Router();
-
-router.get('/', async (req, res) => {
-    try {
-        const chats = await chatModel.find();
-        res.json(chats);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
+import protectedRoute from '../middleware/protectedRoute.js';
+// router.get('/', protectedRoute, fetchAllChats);
+// router.post('/', protectedRoute, accessChat);
+// router.post('/group', protectedRoute, createGroupChat);
+// router.put('/rename', protectedRoute, renameGroupChat);
+// router.put('/removeGroup', protectedRoute, removeGroupChat);
+// router.put('/addUser', protectedRoute, addUserToGroup);
 export default router;
