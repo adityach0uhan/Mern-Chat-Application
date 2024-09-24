@@ -50,7 +50,7 @@ const userSignUp = async (req, res) => {
             name,
             profilePic,
             username
-        }).select('-password');
+        });
         await user.save();
         if (!user) {
             return res.status(400).json({ message: 'User not created' });
