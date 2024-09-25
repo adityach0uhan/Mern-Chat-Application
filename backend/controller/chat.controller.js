@@ -1,7 +1,6 @@
 import ChatModel from '../models/chat.model.js';
 import UserModel from '../models/user.model.js';
 
-// Access chat
 export async function accessChat(req, res) {
     console.log('User Model Import', UserModel);
     console.log('Access chat Hit');
@@ -117,7 +116,7 @@ export async function createGroupChat(req, res) {
 }
 
 export async function renameGroupChat(req, res) {
-    const { chatId, chatName } = req.body;
+    const { chatId, chatName } = await req.body;
     if (!chatId || !chatName)
         return res
             .status(400)
@@ -134,6 +133,39 @@ export async function renameGroupChat(req, res) {
         if (!updatedChat)
             return res.status(400).json({ message: 'Chat not found' });
 
+        res.status(200).json(updatedChat);
+    } catch (error) {
+        res.status(404).json({
+            message: error.message
+        });
+    }
+}
+
+export async function addUserToGroup(req, res) {
+    console.log('Add user to group hit');
+    const { chatId, userId } = await req.body;
+    if (!chatId || !userId)
+        return res
+            .status(400)
+            .json({ message: 'Chat ID and User ID are required' });
+
+    try {
+        const chat = await ChatModel.findById(chatId);
+        if (!chat) return res.status(400).json({ message: 'Chat not found' });
+
+        if (chat.groupAdmin.toString() !== req.user._id.toString())
+            return res.status(400).json({ message: 'You are not the admin' });
+
+        if (chat.users.includes(userId))
+            return res.status(400).json({ message: 'User already in group' });
+
+        await chat.users.push(userId);
+        await chat.save();
+        const updatedChat = await ChatModel.findOne({
+            _id: chatId
+        })
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password');
         res.status(200).json(updatedChat);
     } catch (error) {
         res.status(404).json({
