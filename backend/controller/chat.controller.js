@@ -1,32 +1,30 @@
-import UserModel from '../models/user.model';
+import ChatModel from '../models/chat.model.js';
+import UserModel from '../models/user.model.js';
 
-export const fetchAllChats = async (req, res) => {
-    try {
-        const chats = await chatModel.find();
-        res.status(200).json(chats);
-    } catch (error) {
-        res.status(404).json({ message: error.message });
-    }
-};
-
-export const accessChat = async (req, res) => {
-    const { user_id } = req.body;
+// Access chat
+export async function accessChat(req, res) {
+    console.log('User Model Import', UserModel);
+    console.log('Access chat Hit');
+    const { user_id } = await req.body;
+    console.log(user_id);
     if (!user_id)
         return res.status(400).json({ message: 'User ID is required' });
     try {
-        var isChat = await chatModel
-            .find({
-                isGroupChat: false,
-                $and: [
-                    { users: { $elemMatch: { $eq: user._id } } },
-                    { users: { $elemMatch: { $eq: user_id } } }
-                ]
-            })
+        console.log('Inside most outer try ');
+        let isChat = await ChatModel.find({
+            isGroupChat: false,
+            $and: [
+                { users: { $elemMatch: { $eq: req.user._id } } },
+                { users: { $elemMatch: { $eq: user_id } } }
+            ]
+        })
             .populate('users', '-password')
             .populate('latestMessage');
+        console.log('Is chat =', isChat);
+
         isChat = await UserModel.populate(isChat, {
             path: 'latestMessage.sender',
-            select: 'name email profilePic -password'
+            select: 'name email username profilePic -password'
         });
 
         if (isChat.length > 0) {
@@ -37,21 +35,109 @@ export const accessChat = async (req, res) => {
                 users: [req.user._id, user_id],
                 isGroupChat: false
             };
-            try {
-                const createdChat = await chatModel.create(chatData);
-                createdChat.save();
-                const fullChat = await chatModel
-                    .findOne({
-                        _id: createdChat._id
-                    })
-                    .populate('users', '-password');
 
-                return res.status(200).json(fullChat);
+            try {
+                console.log('Inside most inner try ');
+                const createdChat = await ChatModel.create(chatData);
+                console.log('Created chat =', createdChat);
+                const fullChat = await ChatModel.findOne({
+                    _id: createdChat._id
+                }).populate('users', '-password');
+                console.log('Full chat =', fullChat);
+                res.status(200).json(fullChat);
             } catch (error) {
-                return res.status(404).json({ message: error.message });
+                console.error('Error in accessChat inner catch:', error); // Log full error details
+                res.status(404).json({
+                    message: error.message
+                });
             }
         }
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        console.error('Error in accessChat outer catch:', error); // Log full error details
+        res.status(404).json({
+            message: error.message
+        });
     }
-};
+}
+
+export async function fetchAllChats(req, res) {
+    try {
+        let result = await ChatModel.find({
+            users: { $elemMatch: { $eq: req.user._id } }
+        })
+            .populate('users', '-password')
+            .populate('groupAdmin')
+            .populate('latestMessage')
+            .sort({ updatedAt: -1 });
+
+        result = await UserModel.populate(result, {
+            path: 'latestMessage.sender',
+            select: 'name  username profilePic '
+        });
+
+        await res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({
+            message: error.message
+        });
+    }
+}
+
+export async function createGroupChat(req, res) {
+    const { users, chatName } = req.body;
+    if (!users || !chatName)
+        return res
+            .status(400)
+            .json({ message: 'Users and Chat Name are required' });
+
+    try {
+        if (users.length < 2)
+            return res
+                .status(400)
+                .json({ message: 'Please add more than one user' });
+        await users.push(req.user._id);
+        const groupChat = await ChatModel.create({
+            chatName,
+            users,
+            isGroupChat: true,
+            groupAdmin: req.user._id
+        });
+
+        const fullChat = await ChatModel.findOne({
+            _id: groupChat._id
+        })
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password');
+        res.status(200).json(fullChat);
+    } catch (error) {
+        res.status(404).json({
+            message: error.message
+        });
+    }
+}
+
+export async function renameGroupChat(req, res) {
+    const { chatId, chatName } = req.body;
+    if (!chatId || !chatName)
+        return res
+            .status(400)
+            .json({ message: 'Chat ID and Chat Name are required' });
+
+    try {
+        const updatedChat = await ChatModel.findByIdAndUpdate(
+            chatId,
+            { chatName },
+            { new: true }
+        )
+            .populate('users', '-password')
+            .populate('groupAdmin', '-password');
+        if (!updatedChat)
+            return res.status(400).json({ message: 'Chat not found' });
+
+        res.status(200).json(updatedChat);
+    } catch (error) {
+        res.status(404).json({
+            message: error.message
+        });
+    }
+}

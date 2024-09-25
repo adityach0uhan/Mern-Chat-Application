@@ -1,5 +1,4 @@
-import mongoose from 'mongoose';
-
+import mongoose, { mongo } from 'mongoose';
 const chatSchema = new mongoose.Schema(
     {
         chatName: {
@@ -10,14 +9,14 @@ const chatSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
-        users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserModel' }],
+        users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
         latestMessage: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'MessageModel'
+            ref: 'Message'
         },
         groupAdmin: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'UserModel'
+            ref: 'Users'
         },
         profilePic: {
             type: String
@@ -26,6 +25,6 @@ const chatSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-const ChatModel = mongoose.model('Chat', chatSchema);
+const ChatModel = mongoose.models.Chats || mongoose.model('Chats', chatSchema);
 
 export default ChatModel;

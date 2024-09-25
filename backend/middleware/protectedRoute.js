@@ -19,7 +19,6 @@ export default async function protectedRoute(req, res, next) {
                     .json({ message: 'User not found , Login again ' });
             }
             req.user = user;
-            console.log('Req.user', req.user);
             next();
         } catch (error) {
             res.status(500).json({ message: error.message });

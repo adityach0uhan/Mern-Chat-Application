@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -23,12 +23,12 @@ const userSchema = new mongoose.Schema(
         },
         profilePic: {
             type: String,
-            default: '../assets/default.png'
+            default: ''
         }
     },
     { timestamps: true }
 );
 
-const UserModel = mongoose.model('User', userSchema);
+const UserModel = mongoose.models.Users || mongoose.model('Users', UserSchema);
 
 export default UserModel;
