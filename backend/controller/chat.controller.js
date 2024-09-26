@@ -2,14 +2,10 @@ import ChatModel from '../models/chat.model.js';
 import UserModel from '../models/user.model.js';
 
 export async function accessChat(req, res) {
-    console.log('User Model Import', UserModel);
-    console.log('Access chat Hit');
-    const { user_id } = await req.body;
-    console.log(user_id);
+    const { user_id } = req.body;
     if (!user_id)
         return res.status(400).json({ message: 'User ID is required' });
     try {
-        console.log('Inside most outer try ');
         let isChat = await ChatModel.find({
             isGroupChat: false,
             $and: [
@@ -19,7 +15,6 @@ export async function accessChat(req, res) {
         })
             .populate('users', '-password')
             .populate('latestMessage');
-        console.log('Is chat =', isChat);
 
         isChat = await UserModel.populate(isChat, {
             path: 'latestMessage.sender',
@@ -36,13 +31,10 @@ export async function accessChat(req, res) {
             };
 
             try {
-                console.log('Inside most inner try ');
                 const createdChat = await ChatModel.create(chatData);
-                console.log('Created chat =', createdChat);
                 const fullChat = await ChatModel.findOne({
                     _id: createdChat._id
                 }).populate('users', '-password');
-                console.log('Full chat =', fullChat);
                 res.status(200).json(fullChat);
             } catch (error) {
                 console.error('Error in accessChat inner catch:', error); // Log full error details

@@ -28,9 +28,10 @@ import { SearchIcon } from '@chakra-ui/icons';
 import UserList from './UserList';
 import { useToast } from '@chakra-ui/react';
 import Loader from './Loader';
+import { Spinner } from '@chakra-ui/react';
 
 const SideDrawer = () => {
-    const { user } = chatState();
+    const { user, setSelectedChat, chats, setChats } = chatState();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const btnRef = React.useRef();
     const [search, setSearch] = useState('');
@@ -40,12 +41,14 @@ const SideDrawer = () => {
     const toast = useToast();
 
     const handelSearch = async () => {
+        setLoading(true);
         if (search.length === 0) {
             toast({
                 title: `Search field is empty`,
                 status: 'warning',
                 isClosable: true
             });
+            setLoading(false);
         } else {
             setLoading(true);
             await axios
@@ -53,7 +56,6 @@ const SideDrawer = () => {
                     `http://localhost:3000/api/user/allusers?search=${search}`,
                     { withCredentials: true }
                 )
-
                 .then((response) => {
                     setLoading(false);
                     setSearchResults(response.data.data);
@@ -73,6 +75,32 @@ const SideDrawer = () => {
         setSearch('');
         setSearchResults([]);
         onClose();
+    };
+
+    const accessChat = async (userId) => {
+        try {
+            setLoadingChats(true);
+            const { data } = await axios.post(
+                'http://localhost:3000/api/chat/',
+                { user_id: userId },
+                { withCredentials: true }
+            );
+
+            if (!chats.find((c) => c._id === data._id))
+                setChats([data, ...chats]);
+
+            setSelectedChat(data);
+            setLoadingChats(false);
+            onClose();
+        } catch (error) {
+            console.log(error.message);
+            toast({
+                title: `Something went wrong while Fetching selected chat`,
+                status: 'error',
+                isClosable: true
+            });
+            setLoadingChats(false);
+        }
     };
 
     return (
@@ -135,10 +163,19 @@ const SideDrawer = () => {
                                 <Loader />
                             ) : (
                                 searchResults.map((user) => (
-                                    <UserList key={user._id} user={user} />
+                                    <div
+                                        key={user._id}
+                                        onClick={() => accessChat(user._id)}>
+                                        <UserList user={user} />
+                                    </div>
                                 ))
                             )}
                         </div>
+                        {loadingChats ? (
+                            <div className='flex items-center w-full  justify-center'>
+                                <Spinner />
+                            </div>
+                        ) : null}
                     </DrawerBody>
                 </DrawerContent>
             </Drawer>

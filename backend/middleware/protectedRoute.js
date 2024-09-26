@@ -9,7 +9,7 @@ export default async function protectedRoute(req, res, next) {
             .json({ message: 'Unauthorized , Please Login to continue' });
     } else {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = await jwt.verify(token, process.env.JWT_SECRET);
             const user = await UserModel.findById(decoded.id).select(
                 '-password'
             );
@@ -18,7 +18,7 @@ export default async function protectedRoute(req, res, next) {
                     .status(404)
                     .json({ message: 'User not found , Login again ' });
             }
-            req.user = user;
+            req.user = await user;
             next();
         } catch (error) {
             res.status(500).json({ message: error.message });

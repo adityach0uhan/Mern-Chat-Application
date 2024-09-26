@@ -7,9 +7,9 @@ import ChatBox from '../components/ChatBox';
 const ChatPage = () => {
     const { user } = chatState();
     return (
-        <div className='w-screen'>
+        <div className='w-'>
             {user && <SideDrawer />}
-            <div className=''>
+            <div className='flex w-full items-center justify-between '>
                 {user && <AllChats />}
                 {user && <ChatBox />}
             </div>
