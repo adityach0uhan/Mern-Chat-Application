@@ -6,6 +6,7 @@ dotenv.config();
 import connectDatabase from './database/connectDatabase.js';
 import userRoutes from './routes/user.route.js';
 import chatRoutes from './routes/chat.route.js';
+import messageRoutes from './routes/message.route.js';
 import cookieParser from 'cookie-parser';
 
 app.get('/', (req, res) => {
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use('/api/user', userRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/messages', messageRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {

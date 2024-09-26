@@ -37,7 +37,6 @@ const AllChats = () => {
                 display={{ base: selectedChat ? 'none' : 'flex', md: 'flex' }}
                 flexDir='column'
                 h='100vh'
-                bg='red.400'
                 p={4}>
                 <Box
                     pb={4}
@@ -59,7 +58,8 @@ const AllChats = () => {
                     w='100%'
                     h='100%'
                     overflowY='scroll'
-                    bg='gray'
+                    bg='blue.500'
+                    rounded={10}
                     p={4}>
                     {chats ? (
                         chats.length > 0 ? (
