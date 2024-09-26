@@ -1,13 +1,16 @@
-import { useState } from 'react';
-import { Button, ButtonGroup } from '@chakra-ui/react';
-import Login from './components/Login.jsx';
-import SignUp from './components/SignUp.jsx';
+import React from 'react';
+import { Route, Router, Routes } from 'react-router-dom';
+import Home from './pages/HomePage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
+
 function App() {
     return (
         <>
-            <div className='w-screen h-screen flex flex-wrap gap-4 items-center justify-evenly '>
-                <Login></Login>
-                <SignUp></SignUp>
+            <div className='bg-green-300 min-h-screen min-w-screen'>
+                <Routes>
+                    <Route path='/' element={<Home />} exact />
+                    <Route path='/chat' element={<ChatPage />} exact />
+                </Routes>
             </div>
         </>
     );
