@@ -1,38 +1,56 @@
 import UserModel from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const userLogin = async (req, res) => {
     const { email, password, username } = req.body;
+
     try {
+        // Find user by email or username
         const user = await UserModel.findOne({
             $or: [{ email }, { username }]
         });
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+
+        // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res
-                .status(400)
-                .json({ message: 'Invalid credentials password not match' });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
-        const token = await jwt.sign(
-            { id: user._id, name: user.name, username: user.username },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: '1d'
-            }
-        );
-        res.cookie('token', token, {
-            httpOnly: true
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '10d'
         });
 
-        res.status(200).json({ token });
+        // Set the token as an HTTP-only cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            credentials: true
+        });
+
+        // Respond with user details (excluding the token from the response body)
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            profilePic: user.profilePic
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message, error });
+        // Handle errors
+        res.status(500).json({ message: error.message });
     }
 };
+
+export default userLogin;
 
 const userSignUp = async (req, res) => {
     const { email, password, name, profilePic, username } = await req.body;
